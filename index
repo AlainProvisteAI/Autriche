@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnet de Voyage - Autriche en Van Ducato</title>
+
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet Routing Machine CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg-main: #f8fafb;
+    --card-bg: #ffffff;
+    --primary: #2d5a27;
+    --primary-light: #eaf2ed;
+    --secondary: #2b5b84;
+    --secondary-light: #eaf2f8;
+    --accent: #d97706;
+    --accent-light: #fef3c7;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+  }
+
+  .container { max-width: 1240px; margin: 0 auto; padding: 24px; }
+  a { color: var(--secondary); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; color: var(--primary); }
+
+  /* Header Blog Voyage */
+  .header {
+    background: linear-gradient(135deg, #1e3a29 0%, #2d5a27 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 35px 30px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 24px;
+  }
+
+  .header h1 { margin: 0 0 10px 0; font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+  .header p { margin: 0; font-size: 15px; opacity: 0.9; font-weight: 500; }
+
+  /* Date Picker Config Bar */
+  .date-config-bar {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 20px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .date-config-bar input {
+    font-family: inherit;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 700;
+    color: var(--text-dark);
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Tabs Navigation */
+  .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 24px; padding-bottom: 8px; }
+  .tab-btn {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tab-btn:hover { color: var(--primary); background-color: var(--primary-light); border-color: var(--primary); }
+  .tab-btn.active { background-color: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 4px 10px rgba(45, 90, 39, 0.25); }
+
+  /* Content Display */
+  .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Layout Columns */
+  .day-layout { display: grid; grid-template-columns: 1fr 420px; gap: 24px; }
+  @media (max-width: 1024px) { .day-layout { grid-template-columns: 1fr; } }
+
+  /* Cards Styling */
+  .card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 24px;
+  }
+
+  .card h2 { color: var(--text-dark); font-size: 22px; font-weight: 800; margin-top: 0; margin-bottom: 16px; }
+  .card h3 { color: var(--primary); font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 28px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h3:first-child { margin-top: 0; }
+
+  /* Banner Infos Clés Journée */
+  .day-header-banner { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .banner-item { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+  .banner-step { background-color: var(--secondary-light); color: var(--secondary); border: 1px solid #cbd5e1; }
+  .banner-type { background-color: var(--primary-light); color: var(--primary); border: 1px solid #c6e2d0; }
+
+  /* Widget Météo Dynamique API */
+  .weather-banner {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .weather-left { display: flex; align-items: center; gap: 14px; }
+  .weather-icon { font-size: 34px; }
+  .weather-temp { font-size: 24px; font-weight: 800; line-height: 1; }
+  .weather-desc { font-size: 13px; opacity: 0.95; font-weight: 500; }
+  .weather-date-badge { background: rgba(255, 255, 255, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+
+  /* Map Container */
+  .map-container { width: 100%; height: 380px; border-radius: 14px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--border-color); z-index: 1; }
+  .leaflet-routing-container { display: none !important; }
+  .custom-div-icon { background: none; border: none; font-size: 24px; text-align: center; cursor: pointer; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+
+  /* Metrics Grid */
+  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-box { background-color: var(--bg-main); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border-color); }
+  .metric-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+  .metric-value { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-top: 4px; }
+
+  /* Info Block */
+  .info-block { background-color: #fffbe2; border: 1px solid #fde047; color: #854d0e; padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; line-height: 1.5; }
+
+  /* Listes Points d'Intérêt (POI) */
+  .poi-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+  .poi-list li {
+    background-color: var(--bg-main);
+    margin-bottom: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    font-size: 13.5px;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .poi-list li strong { color: var(--primary); font-size: 15px; display: block; margin-bottom: 4px; font-weight: 700; }
+
+  /* Timeline */
+  .timeline { border-left: 3px solid #cbd5e1; padding-left: 20px; margin: 20px 0; position: relative; }
+  .timeline-item { margin-bottom: 18px; position: relative; }
+  .timeline-item::before { content: ''; position: absolute; left: -26.5px; top: 4px; width: 10px; height: 10px; background-color: var(--secondary); border-radius: 50%; }
+  .time-badge { background-color: var(--secondary-light); color: var(--secondary); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; margin-bottom: 6px; }
+
+  /* Recommandations Cards */
+  .reco-container { display: flex; flex-direction: column; gap: 12px; }
+  .reco-card { background: var(--bg-main); border-radius: 12px; border: 1px solid var(--border-color); padding: 14px; cursor: pointer; transition: all 0.2s ease; }
+  .reco-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); background-color: #ffffff; }
+  .reco-details h4 { margin: 0 0 6px 0; font-size: 15px; color: var(--text-dark); font-weight: 700; }
+  .reco-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .reco-rating { background: var(--accent-light); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+  .reco-line { font-size: 12.5px; color: var(--text-muted); margin-bottom: 4px; }
+  .reco-price { margin-top: 8px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 6px; display: inline-block; font-size: 12px; }
+
+  /* Commentaires / Bloc Notes */
+  .comments-section { margin-top: 24px; background: #f1f5f9; padding: 16px; border-radius: 12px; border: 1px dashed #94a3b8; }
+  .comments-section h4 { margin: 0 0 8px 0; color: var(--text-dark); font-size: 13px; font-weight: 700; }
+  .comments-section textarea { width: 100%; height: 75px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 13px; resize: vertical; box-sizing: border-box; outline: none; }
+
+  /* Tables Urgences & Checklist */
+  .urgency-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+  .urgency-table th, .urgency-table td { padding: 12px; border: 1px solid var(--border-color); text-align: left; }
+  .urgency-table th { background-color: var(--primary-light); color: var(--primary); font-weight: 700; }
+
+  .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+  @media (max-width: 768px) { .checklist-grid { grid-template-columns: 1fr; } }
+  .checklist-box { background: var(--bg-main); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); }
+  .checklist-box h5 { margin: 0 0 10px 0; color: var(--primary); font-size: 14px; font-weight: 700; border-bottom: 2px solid var(--primary-light); padding-bottom: 4px; }
+  .checklist-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-muted); }
+  .checklist-box li { margin-bottom: 6px; }
+
+  /* Synthèse Grid Cards */
+  .synth-recap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  @media (max-width: 768px) { .synth-recap { grid-template-columns: repeat(2, 1fr); } }
+  .synth-box { text-align: center; padding: 18px; border-radius: 14px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+  .synth-icon { font-size: 28px; margin-bottom: 4px; }
+  .synth-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
+  .synth-value { font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <header class="header">
+    <h1>🏔️ Voyage en Van Ducato en Autriche</h1>
+    <p>Road-Trip familial : 2 Adultes (Maman enceinte 4,5 mois) + 1 Bébé (21 mois) | Fiat Ducato Aménagé (9,5L/100km)</p>
+    
+    <div class="date-config-bar">
+      <span>📅 Date de départ du voyage :</span>
+      <input type="date" id="global-start-date" value="2026-08-24" oninput="updateWeatherDates()" onchange="updateWeatherDates()">
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="openDay(event, 'synthese')">🌍 Synthèse Globale</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour1')">Jour 1 : Bregenz</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour2')">Jour 2 : Kleinwalsertal</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour3')">Jour 3 : Plansee</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour4')">Jour 4 : Stuibenfall</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour5')">Jour 5 : Innsbruck</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour6')">Jour 6 : Achensee</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour7')">Jour 7 : Krimml</button>
+    <button class="tab-btn" onclick="openDay(event, 'jour89')">Jours 8/9 : Retour</button>
+    <button class="tab-btn" onclick="openDay(event, 'infos')">Infos, Matériel & Urgences</button>
+  </div>
+
+  <!-- SYNTHÈSE GLOBALE -->
+  <div id="synthese" class="tab-content" style="display: block;">
+    <div class="card">
+      <h2>Vue d'ensemble de l'itinéraire</h2>
+      <div id="map-synthese" class="map-container" style="height: 460px;"></div>
+      
+      <h3>📊 Chiffres Clés du Voyage</h3>
+      <div class="synth-recap">
+        <div class="synth-box">
+          <div class="synth-icon">🛣️</div>
+          <div class="synth-title">Distance Totale</div>
+          <div class="synth-value">~ 1 738 km</div>
+        </div>
+        <div class="synth-box">
+          <div class="synth-icon">🥾</div>
+          <div class="synth-title">Balades / Randos</div>
+          <div class="synth-value">6 Faciles</div>
+        </div>
+        <div class="synth-box">
+          <div class="synth-icon">⛺</div>
+          <div class="synth-title">Nuits en Van</div>
+          <div class="synth-value">8 Nuits</div>
+        </div>
+        <div class="synth-box">
+          <div class="synth-icon">🚐</div>
+          <div class="synth-title">Véhicule</div>
+          <div class="synth-value">Fiat Ducato</div>
+        </div>
+      </div>
+
+      <h3>💶 Budget Global Estimé (Ducato Aménagé + 2 Ad + 1 Bébé)</h3>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-label">Trajet (Diesel 9,5L/100 + Péages)</div>
+          <div class="metric-value">~ 311 €</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">Diesel estimé à 1,75€/L (~288€). Inclut Vignette 10j (11,50€) et Col Gerlos (11€).</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Hébergement (8 Nuits Campings)</div>
+          <div class="metric-value">~ 335 €</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">Moyenne de 38€ à 48€/nuit pour forfait Van + 2 Adultes (bébé gratuit -2 ans).</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Activités & Visites</div>
+          <div class="metric-value">~ 211 €</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">Inclus Pfänderbahn, Kanzelwandbahn, Croisières Plansee & Achensee, Ötzi-Dorf, Nordkette, Krimml.</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Restauration (Restaurants préconisés)</div>
+          <div class="metric-value">~ 780 €</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">Estimation sur la moyenne des prix menus midi/soir des adresses recommandées.</div>
+        </div>
+      </div>
+
+      <h3>🍲 Spécialités Gastronomiques Incontournables à Goûter</h3>
+      <ul class="poi-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+        <li>
+          <strong>Kässpätzle (Vorarlberg & Tyrol)</strong>
+          Pâtes fraîches artisanales sautées avec un mélange de fromages d'alpage corsés (Vorarlberger Bergkäse), surmontées d'oignons frits croustillants.
+        </li>
+        <li>
+          <strong>Wiener Schnitzel</strong>
+          La fameuse escalope de veau (ou de porc) finement martelée, enrobée d'une panure dorée et croustillante, servie avec salade de pommes de terre (Kartoffelsalat).
+        </li>
+        <li>
+          <strong>Apfelstrudel & Topfenstrudel</strong>
+          Gâteau feuilleté chaud garni de pommes sûrettes, cannelle et raisins secs (ou de fromage blanc pour le Topfenstrudel), nappé de sauce vanille chaude.
+        </li>
+        <li>
+          <strong>Kaiserschmarrn</strong>
+          Épaisse crêpe soufflée tyrolienne découpée en morceaux caramélisés à la poêle, saupoudrée de sucre glace et servie avec une compote de prunes (Zwetschkenröster).
+        </li>
+        <li>
+          <strong>Tiroler Gröstl</strong>
+          Plat traditionnel poêlé réconfortant à base de pommes de terre, morceaux de viande rôtie, oignons et surmonté d'un œuf au plat.
+        </li>
+        <li>
+          <strong>Knödel (Speckknödel & Kaspressknödel)</strong>
+          Quenelles de pain typiques, soit garnies de bacon fumé dans un bouillon, soit au fromage poêlées au beurre noisette.
+        </li>
+      </ul>
+
+      <h3>🌟 Liste Synthétique des Sites Touristiques du Parcours</h3>
+      <ul class="poi-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+        <li>
+          <strong>Lac de Constance & Promenade de Bregenz</strong>
+          Vaste lac subalpin bordé d'une promenade piétonne fleurie et entièrement plate, idéale pour flâner avec une poussette.
+        </li>
+        <li>
+          <strong>Mont Pfänder (1 064 m)</strong>
+          Sommet dominant le lac de Constance. Ascension sans effort par le téléphérique Pfänderbahn offrant un panorama sur 240 sommets alpins.
+        </li>
+        <li>
+          <strong>Vallée du Kleinwalsertal & Breitachweg</strong>
+          Enclave autrichienne accessible uniquement par l'Allemagne, réputée pour ses paysages pastoraux et son sentier aménagé le long du torrent.
+        </li>
+        <li>
+          <strong>Kanzelwand (1 957 m)</strong>
+          Haut sommet frontalier germano-autrichien offrant de vastes alpages accessibles directement en cabine.
+        </li>
+        <li>
+          <strong>Lac Plansee</strong>
+          Deuxième plus grand lac du Tyrol, aux eaux turquoise cristallines rappelant les fjords norvégiens, encadré par les monts de Reutte.
+        </li>
+        <li>
+          <strong>Cascade de Stuibenfall (Umhausen)</strong>
+          La plus haute chute d'eau du Tyrol (159 m de hauteur). L'accès inférieur permet une observation spectaculaire en 20 min de marche.
+        </li>
+        <li>
+          <strong>Ötzi-Dorf</strong>
+          Parc archéologique en plein air reconstituant l'habitat néolithique d'Ötzi, l'homme préhistorique découvert congelé dans la région.
+        </li>
+        <li>
+          <strong>Innsbruck & Petit Toit d'Or (Goldenes Dachl)</strong>
+          Capitale du Tyrol riche en histoire impériale, bordée par l'Inn et célèbre pour son alcôve gothique couverte de 2 657 tuiles en cuivre doré.
+        </li>
+        <li>
+          <strong>Massif de la Nordkette (Hungerburgbahn)</strong>
+          Le "balcon d'Innsbruck". Funiculaire à l'architecture d'avant-garde signé Zaha Hadid menant sur les hauts plateaux en quelques minutes.
+        </li>
+        <li>
+          <strong>Lac Achensee (La "Mer du Tyrol")</strong>
+          Le plus grand lac du Tyrol, niché entre les massifs du Karwendel et du Rofan, réputé pour ses croisières à vapeur rétro.
+        </li>
+        <li>
+          <strong>Parc Naturel du Karwendel (Pertisau)</strong>
+          La plus grande réserve naturelle des Alpes orientales. Vallées pastorales accessibles par de larges pistes ombragées.
+        </li>
+        <li>
+          <strong>Col du Gerlospass & Cascades de Krimml</strong>
+          Route alpine panoramique menant aux plus hautes cascades d'Europe centrale (380 m de chute). Sentier bas asphalté.
+        </li>
+        <li>
+          <strong>Presqu'île de Lindau (Lac de Constance)</strong>
+          Cité bavaroise historique bâtie sur une île, connue pour ses ruelles médiévales et son port gardé par le lion bavarois.
+        </li>
+      </ul>
+
+      <div class="comments-section">
+        <h4>📝 Carnet de Notes Global / Remarques de Voyage</h4>
+        <textarea id="note-synthese" placeholder="Saisissez vos notes globales ici (ex: numéros de réservations, pense-bête)..." oninput="saveNote('synthese')"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 1 -->
+  <div id="jour1" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 1 : Lundi 24 Août — Arrivée au Lac de Constance</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Meaux (06h00) ➔ Bregenz (12h15)</div>
+          <div class="banner-item banner-type">🏞️ Nature, Lac & Panorama</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j1">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j1">☀️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j1">--°C</div>
+              <div class="weather-desc" id="wdesc-j1">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j1">24 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour1" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">5 h 15 min | 560 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 93 € (53,2 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">Vignette 10j (11,50 €)</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Pfänderbahn (~2,50€/h)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Parkplatz Pfänderbahn : Schillerstraße 15, 6900 Bregenz.<br>
+          <strong>🎟️ Activités :</strong> Pfänderbahn A/R : 16,50 € / ad | Gratuit bébé.<br>
+          <strong>⚠️ Réservation :</strong> Camping bord du lac à Lochau/Bregenz à réserver impérativement pour août.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Promenade du Lac de Constance (Bregenz)</strong>
+            Aménagement piétonnier d'exception bordant le lac. Entièrement plat et ombragé par de grands arbres, c'est l'endroit idéal pour dégourdir les jambes de bébé et faire une promenade reposante pour maman avec la poussette.
+          </li>
+          <li>
+            <strong>Mont Pfänder & Téléphérique Pfänderbahn</strong>
+            Le Pfänder (1 064m) offre la plus belle vue panoramique sur l'ensemble du lac de Constance. La grande cabine du téléphérique est directement accessible de plein pied (poussette bienvenue) et permet d'atteindre le sommet en 6 minutes sans aucun effort physique.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">06:00 – 12:15</div>
+            <div><strong>Trajet Meaux ➔ Bregenz (560 km | 5h15) :</strong> Trajet direct via autoroutes A4 (France) puis A81 / A96 (Allemagne). Pas de péage d'autoroute allemand. Pauses régulières recommandées toutes les 1h30 pour maman et bébé.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">12:15 – 13:45</div>
+            <div><strong>Installation & Déjeuner (Lochau / Bregenz) :</strong> Arrivée sur les rives du Vorarlberg. Installation du van au camping et repas en terrasse au bord de l'eau.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">14:00 – 16:30</div>
+            <div><strong>Balade Poussette Promenade du Lac (Durée : 1h30 à 2h A/R | Ultra-Facile | Départ : Port de Bregenz) :</strong> Circuit complètement à plat au fil de la promenade ombragée. Vues sur les voiliers, parc de jeux pour enfants et glaces artisanales.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">16:30 – 18:00</div>
+            <div><strong>Ascension Mont Pfänder (Téléphérique 6 min | Schillerstraße 15) :</strong> Embarquement sans marche. Au sommet : panorama à 360° sur 240 sommets alpins et petit parc animalier alpin gratuit accessible en poussette.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">18:30 – 21:00</div><div>Dîner paisible au bord de l'eau au coucher du soleil.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 1</h4>
+          <textarea id="note-j1" placeholder="Notes pour le jour 1..." oninput="saveNote('j1')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper <span>(Zoom carte au clic)</span></h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour1', 47.525, 9.745)">
+              <div class="reco-details">
+                <h4>Weiss-Camping (Lochau)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Bäumle 2, 6911 Lochau</div>
+                <div class="reco-line">📞 +43 5574 43013</div>
+                <div class="reco-line">🌐 <a href="https://www.weiss-camping.at" target="_blank">weiss-camping.at</a></div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~42 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour1', 47.535, 9.715)">
+              <div class="reco-details">
+                <h4>Park Camping Lindau</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Fraunhoferstraße 20, Lindau</div>
+                <div class="reco-line">📞 +49 8382 72236</div>
+                <div class="reco-line">🌐 <a href="https://www.park-camping.de" target="_blank">park-camping.de</a></div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~45 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour1', 47.502, 9.715)">
+              <div class="reco-details">
+                <h4>Camping Park Stadt Bregenz</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.1/5</span></div>
+                <div class="reco-line">📍 Hechtweg 1, 6900 Bregenz</div>
+                <div class="reco-line">📞 +43 5574 42720</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-bregenz.at" target="_blank">camping-bregenz.at</a></div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~38 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger (Recommandations)</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour1', 47.504, 9.745)">
+              <div class="reco-details">
+                <h4>Wirtshaus am See (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Seestraße 2, Bregenz</div>
+                <div class="reco-line">🌐 <a href="https://www.wirtshausamsee.at" target="_blank">wirtshausamsee.at</a></div>
+                <div class="reco-line">ℹ️ Poisson du lac & spécialités en terrasse.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~25 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour1', 47.506, 9.744)">
+              <div class="reco-details">
+                <h4>Pier 69 (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Seestraße 4, Bregenz</div>
+                <div class="reco-line">🌐 <a href="https://www.pier69.at" target="_blank">pier69.at</a></div>
+                <div class="reco-line">ℹ️ Cadre moderne et très accessible poussette.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~22 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour1', 47.503, 9.747)">
+              <div class="reco-details">
+                <h4>Gasthaus Kornmesser (Soir)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Kornmarktstraße 9, Bregenz</div>
+                <div class="reco-line">🌐 <a href="https://www.kornmesser.at" target="_blank">kornmesser.at</a></div>
+                <div class="reco-line">ℹ️ Institution pour déguster le Schnitzel.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~28 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 2 -->
+  <div id="jour2" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 2 : Mardi 25 Août — Vallée du Kleinwalsertal</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Bregenz (09h00) ➔ Riezlern (10h15)</div>
+          <div class="banner-item banner-type">🥾 Balade Rivière & Alpages</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j2">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j2">🌤️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j2">--°C</div>
+              <div class="weather-desc" id="wdesc-j2">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j2">25 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour2" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">1 h 10 min | 68 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 11,30 € (6,5 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Kanzelwand (~6€/j)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Parkplatz Kanzelwandbahn : Walserstraße 84, 6991 Riezlern.<br>
+          <strong>🎟️ Activités :</strong> Téléphérique Kanzelwandbahn A/R : ~26 € / ad | Gratuit bébé.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Sentier le long de la Breitach (Breitachweg)</strong>
+            Un magnifique itinéraire très plat et aménagé qui longe le torrent cristallin de la Breitach. Le bruit de l'eau est apaisant et la piste est carrossable pour poussettes tout-terrain ou marche douce.
+          </li>
+          <li>
+            <strong>Alpages du Kanzelwand</strong>
+            Le téléphérique Kanzelwandbahn vous élève à près de 2 000 mètres. À la station supérieure, un sentier panoramique très peu incliné permet de se promener au milieu des vaches et des fleurs d'alpage avec une vue plongeante sur la vallée.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">09:00 – 10:15</div>
+            <div><strong>Trajet Bregenz ➔ Riezlern (68 km | 1h10) :</strong> Belle route alpine sinueuse passant brièvement par la frontière bavaroise d'Oberstdorf avant de remonter dans la vallée enclavée du Kleinwalsertal.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">10:30 – 12:30</div>
+            <div><strong>Randonnée Breitachweg (Durée : 1h30 à 2h A/R | Niveau : Très Facile | Départ : Pont de Riezlern) :</strong> Chemin aménagé très peu incliné longeant la rivière cristalline. Ombragé et frais.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">12:30 – 14:00</div>
+            <div><strong>Déjeuner d'Alpage :</strong> Halte gourmande dans une auberge de tradition servant des Kässpätzle au fromage d'alpage.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">14:30 – 16:30</div>
+            <div><strong>Excursion Kanzelwand (Téléphérique | Walserstraße 84) :</strong> Ascension à 1 957 m. Promenade panoramique à plat au sommet (30 min) surplombant les sommets du Vorarlberg.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">17:00 – 19:30</div>
+            <div>Installation au camping au bord de la rivière et soirée au calme.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 2</h4>
+          <textarea id="note-j2" placeholder="Notes pour le jour 2..." oninput="saveNote('j2')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour2', 47.327, 10.155)">
+              <div class="reco-details">
+                <h4>Camping Vorderboden</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Vorderboden 1, Mittelberg</div>
+                <div class="reco-line">📞 +43 5529 5275</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-vorderboden.at" target="_blank">camping-vorderboden.at</a></div>
+                <div class="reco-line">ℹ️ Immergé dans la nature au bord du torrent.</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~38 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour2', 47.348, 10.175)">
+              <div class="reco-details">
+                <h4>Zentralcamping Hirschegg</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Hirschegg, Kleinwalsertal</div>
+                <div class="reco-line">🌐 <a href="https://www.kleinwalsertal.com" target="_blank">kleinwalsertal.com</a></div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~40 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour2', 47.356, 10.185)">
+              <div class="reco-details">
+                <h4>Walser Stuba (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.7/5</span></div>
+                <div class="reco-line">📍 Walserstraße 87, Riezlern</div>
+                <div class="reco-line">🌐 <a href="https://www.walserstuba.at" target="_blank">walserstuba.at</a></div>
+                <div class="reco-line">ℹ️ Cuisine locale de haute qualité.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~26 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour2', 47.340, 10.160)">
+              <div class="reco-details">
+                <h4>Alpengasthof Hörnlepass (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Hörnlepass 1, Riezlern</div>
+                <div class="reco-line">🌐 <a href="https://www.hoernlepass.at" target="_blank">hoernlepass.at</a></div>
+                <div class="reco-price">💰 Menu moyen/pers : ~24 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour2', 47.352, 10.180)">
+              <div class="reco-details">
+                <h4>Restaurant Freiberg (Soir)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Dorfstraße 12, Riezlern</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~28 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 3 -->
+  <div id="jour3" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 3 : Mercredi 26 Août — Le Lac Plansee</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Riezlern (08h30) ➔ Plansee (10h15)</div>
+          <div class="banner-item banner-type">🚤 Lac Turquoise & Croisière</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j3">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j3">☀️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j3">--°C</div>
+              <div class="weather-desc" id="wdesc-j3">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j3">26 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour3" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">1 h 40 min | 95 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 15,80 € (9 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Plansee (~5€/j)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Parkplatz Plansee Musterausstellung : Plansee 1, 6600 Breitenwang.<br>
+          <strong>🎟️ Activités :</strong> Croisière en bateau Plansee : ~12 € / ad | Gratuit bébé.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Le Lac Plansee (Berge Nord)</strong>
+            Surnommé le "Fjord du Tyrol", le lac Plansee captive par ses eaux turquoise et sa pureté. Le chemin longeant la rive nord est absolument plat, gravillonné et très facile pour s'arrêter faire des pauses au bord de l'eau.
+          </li>
+          <li>
+            <strong>Mini-Croisière sur le Plansee</strong>
+            Une croisière commentée et très douce à bord du bateau à moteur reliant les différentes baies du lac. Une activité reposante et rafraîchissante pour maman enceinte et bébé.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">08:30 – 10:15</div>
+            <div><strong>Trajet Riezlern ➔ Lac Plansee (95 km | 1h40) :</strong> Traverse Reutte et les contreforts bavarois pour rejoindre ce lac caché enchâssé dans les montagnes tyroliennes.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">10:30 – 12:30</div>
+            <div><strong>Promenade Berge Nord du Plansee (Durée : 1h30 A/R libre | Niveau : Ultra-Facile | Départ : Plansee 1) :</strong> Sentier très plat gravillonné au bord de l'eau turquoise claire. Vues sublimes.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">12:30 – 14:00</div><div>Déjeuner en terrasse directement au bord de l'eau.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">14:30 – 16:00</div>
+            <div><strong>Mini-Croisière en Bateau (Durée : 1h15 A/R | Départ embarcadère Seespitz) :</strong> Traversée paisible en bateau motorisé offrant une vue imprenable sur les versants boisés.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">16:30 – 19:00</div><div>Installation au camping au bord du lac et fin d'après-midi détente.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 3</h4>
+          <textarea id="note-j3" placeholder="Notes pour le jour 3..." oninput="saveNote('j3')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour3', 47.476, 10.814)">
+              <div class="reco-details">
+                <h4>Sennalpe Camping Plansee</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Plansee 8, Breitenwang</div>
+                <div class="reco-line">📞 +43 5672 63321</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-plansee.com" target="_blank">camping-plansee.com</a></div>
+                <div class="reco-line">ℹ️ Cadre d'exception, pieds dans l'eau.</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~35 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour3', 47.485, 10.745)">
+              <div class="reco-details">
+                <h4>Camping Rudy Höfer</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Reutte</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~34 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour3', 47.471, 10.792)">
+              <div class="reco-details">
+                <h4>Hotel & Restaurant Seespitz (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.3/5</span></div>
+                <div class="reco-line">📍 Plansee 1, Breitenwang</div>
+                <div class="reco-line">🌐 <a href="https://www.seespitz.at" target="_blank">seespitz.at</a></div>
+                <div class="reco-line">ℹ️ Superbe vue lac depuis la terrasse.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~24 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour3', 47.480, 10.730)">
+              <div class="reco-details">
+                <h4>Gasthof Zum Turm (Soir)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Breitenwang</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~22 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 4 -->
+  <div id="jour4" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 4 : Jeudi 27 Août — Cascade de Stuibenfall</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Plansee (09h00) ➔ Umhausen (10h15)</div>
+          <div class="banner-item banner-type">🌊 Cascade Majestueuse & Ötzi</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j4">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j4">⛅</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j4">--°C</div>
+              <div class="weather-desc" id="wdesc-j4">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j4">27 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour4" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">1 h 15 min | 75 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 12,50 € (7,1 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Bischofsplatz (~5€/j)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Parkplatz Bischofsplatz : Sportplatzweg 1, 6441 Umhausen.<br>
+          <strong>🎟️ Activités :</strong> Visite Ötzi-Dorf : 10,50 € / ad | Gratuit bébé.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Cascade de Stuibenfall (Umhausen)</strong>
+            Plus haute chute du Tyrol (159m). L'accès inférieur depuis le parking se fait par un chemin très doux en sous-bois. En 20 minutes de marche facile, on atteint la première plateforme avec une vue impressionnante sur les embruns.
+          </li>
+          <li>
+            <strong>Ötzi-Dorf (Village néolithique)</strong>
+            Un parc archéologique ombragé et très plat, retraçant la vie quotidienne à l'âge de pierre. Il abrite également un parc animalier avec des espèces anciennes que bébé adorera observer.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">09:00 – 10:15</div>
+            <div><strong>Trajet Plansee ➔ Umhausen (75 km | 1h15) :</strong> Route descendant dans la grande vallée alpine de l'Ötztal.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">10:30 – 13:00</div>
+            <div><strong>Marche Cascade de Stuibenfall (Durée : 1h A/R | Niveau : Facile | Départ : Parking Bischofsplatz) :</strong> Sentier très accessible en sous-bois conduisant en 20 min à la 1ère plateforme panoramique au bas de la chute.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">13:00 – 14:30</div><div>Déjeuner tranquille au village d'Umhausen.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">15:00 – 17:00</div>
+            <div><strong>Visite Ötzi-Dorf (Durée : 1h30 | Sportplatzweg 1) :</strong> Parc entièrement plat en sous-bois reconstituant le village d'Ötzi avec enclos animalier familial.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">17:30 – 19:30</div><div>Installation au camping au cœur de la vallée.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 4</h4>
+          <textarea id="note-j4" placeholder="Notes pour le jour 4..." oninput="saveNote('j4')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour4', 47.070, 10.970)">
+              <div class="reco-details">
+                <h4>Camping Ötztal Längenfeld</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.7/5</span></div>
+                <div class="reco-line">📍 Unterlängenfeld 220, Längenfeld</div>
+                <div class="reco-line">📞 +43 5253 5348</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-oetztal.com" target="_blank">camping-oetztal.com</a></div>
+                <div class="reco-line">ℹ️ Réputé comme l'un des plus beaux du Tyrol.</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~48 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour4', 47.230, 10.730)">
+              <div class="reco-details">
+                <h4>Aktiv-Camping Imst</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Imst</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~36 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour4', 47.142, 10.927)">
+              <div class="reco-details">
+                <h4>Gasthof Krone (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Dorfstraße 20, Umhausen</div>
+                <div class="reco-line">🌐 <a href="https://www.gasthof-krone-umhausen.at" target="_blank">gasthof-krone.at</a></div>
+                <div class="reco-price">💰 Menu moyen/pers : ~24 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour4', 47.144, 10.925)">
+              <div class="reco-details">
+                <h4>Ötztalerei (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Hauptstraße 45, Umhausen</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~20 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 5 -->
+  <div id="jour5" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 5 : Vendredi 28 Août — Innsbruck et Nordkette</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Umhausen (09h00) ➔ Innsbruck ➔ Achensee</div>
+          <div class="banner-item banner-type">🏰 Histoire, Culture & Funiculaire</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j5">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j5">☀️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j5">--°C</div>
+              <div class="weather-desc" id="wdesc-j5">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j5">28 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour5" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">1 h 40 min | 110 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 18,30 € (10,4 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Markthallen (~3,20€/h)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Markthallen-Garage : Innrain 4, 6020 Innsbruck.<br>
+          <strong>🎟️ Activités :</strong> Funiculaire Hungerburgbahn A/R : ~11,40 € / ad.<br>
+          <strong>💡 Réservation :</strong> Billets Hungerburgbahn en ligne pour éviter la file.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Vieille Ville d'Innsbruck & Petit Toit d'Or</strong>
+            Cœur médiéval piéton d'Innsbruck. Admirez l'oriel construit pour l'empereur Maximilien Ier couverte de 2 657 tuiles de cuivre doré, entourée de façades gothiques colorées.
+          </li>
+          <li>
+            <strong>Funiculaire Hungerburgbahn (Nordkette)</strong>
+            Une expérience unique : ce funiculaire au design d'avant-garde part directement du centre piéton pour gravir la montagne. La station Hungerburg offre un panorama grandiose sur Innsbruck et la vallée sans aucune marche.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">09:00 – 10:00</div>
+            <div><strong>Trajet Umhausen ➔ Innsbruck (62 km | 55 min) :</strong> Route directe longeant la rivière Inn jusqu'au cœur du Tyrol.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">10:15 – 12:30</div>
+            <div><strong>Flânerie Piétonne Vieille Ville (Innsbruck) :</strong> Découverte du Petit Toit d'Or (Goldenes Dachl), de la promenade le long de l'Inn et de la rue Maria-Theresien-Straße.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">12:30 – 14:00</div><div>Déjeuner en terrasse dans la vieille ville piétonne.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">14:15 – 16:30</div>
+            <div><strong>Funiculaire Hungerburgbahn (Station Congess) :</strong> Montée spectaculaire en funiculaire (8 min). Promenade au belvédère d'Hungerburg surplombant toute la vallée.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">17:00 – 18:30</div>
+            <div><strong>Trajet Innsbruck ➔ Lac Achensee (48 km | 45 min) :</strong> Remontée vers les hauteurs du lac Achensee et installation au camping.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 5</h4>
+          <textarea id="note-j5" placeholder="Notes pour le jour 5..." oninput="saveNote('j5')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper (Achensee)</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour5', 47.472, 11.711)">
+              <div class="reco-details">
+                <h4>Camping Schwarzenau</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Achenseestraße, Achenkirch</div>
+                <div class="reco-line">📞 +43 5246 6265</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-schwarzenau.at" target="_blank">camping-schwarzenau.at</a></div>
+                <div class="reco-line">ℹ️ Posé au bord de l'eau sous les falaises.</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~44 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour5', 47.504, 11.708)">
+              <div class="reco-details">
+                <h4>Alpen-Caravanpark Achensee</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Achenkirch</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~46 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour5', 47.268, 11.393)">
+              <div class="reco-details">
+                <h4>Gasthof Goldener Adler (Midi Innsbruck)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Herzog-Friedrich-Straße 6</div>
+                <div class="reco-line">🌐 <a href="https://www.goldeneradler.com" target="_blank">goldeneradler.com</a></div>
+                <div class="reco-price">💰 Menu moyen/pers : ~29 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour5', 47.269, 11.394)">
+              <div class="reco-details">
+                <h4>Strudel-Cafe Kröll (Pause Goûter)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.7/5</span></div>
+                <div class="reco-line">📍 Hofgasse 6, Innsbruck</div>
+                <div class="reco-line">ℹ️ Incontournable pour goûter le meilleur Apfelstrudel.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~15 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 6 -->
+  <div id="jour6" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 6 : Samedi 29 Août — La "Mer du Tyrol" (Achensee)</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Camping Achensee ➔ Pertisau (09h45)</div>
+          <div class="banner-item banner-type">⛵ Bateau à Vapeur & Parc Naturel</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j6">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j6">🌤️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j6">--°C</div>
+              <div class="weather-desc" id="wdesc-j6">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j6">29 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour6" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">15 min | 10 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 1,70 € (1 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péage du jour</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Karwendelau (~6€/j)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>Parkings :</strong> Parkplatz Karwendelau : Karwendelstraße, 6213 Pertisau.<br>
+          <strong>🎟️ Activités :</strong> Croisière Achensee Schiffahrt : ~21 € / ad.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Parc Naturel du Karwendel (Vallée de Falzthurn)</strong>
+            L'une des plus belles vallées alpines préservées. Depuis Pertisau, une large piste forestière s'enfonce dans le parc. Le chemin est très plat, ombragé et très roulant pour les poussettes.
+          </li>
+          <li>
+            <strong>Croisière en Bateau à Vapeur sur l'Achensee</strong>
+            Embarquez à Pertisau pour une traversée du plus grand lac du Tyrol. Une navigation paisible bercée par les paysages de montagnes se jetant directement dans les eaux vertes et bleues du lac.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">09:30 – 12:00</div>
+            <div><strong>Balade Poussette Parc Karwendel (Durée : 2h A/R | Niveau : Très Facile | Départ : Pertisau) :</strong> Piste forestière plate et ombragée conduisant au cœur du vallon alpin.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">12:00 – 13:30</div><div>Déjeuner tyrolien dans une auberge de montagne typique (Gramai Alm).</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">14:00 – 16:00</div>
+            <div><strong>Croisière Achensee Schiffahrt (Durée : 1h30 A/R | Embarcadère Pertisau) :</strong> Traversée sur le plus grand lac du Tyrol en bateau rétro.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">16:30 – 19:00</div><div>Trempette des pieds et détente familiale sur les pelouses ombragées du lac.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 6</h4>
+          <textarea id="note-j6" placeholder="Notes pour le jour 6..." oninput="saveNote('j6')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper</h3>
+          <p style="font-size:13px; background:#fffbe2; padding:12px; border-radius:10px; border:1px solid #fde047; color:#854d0e;"><strong>Même camping que la veille (ex: Camping Schwarzenau)</strong> pour 2 nuits consécutives. Évite de replier le van et préserve le rythme de bébé.</p>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour6', 47.400, 11.600)">
+              <div class="reco-details">
+                <h4>Gramai Alm (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.8/5</span></div>
+                <div class="reco-line">📍 Falzthurn 1, Pertisau</div>
+                <div class="reco-line">🌐 <a href="https://www.gramaialm.at" target="_blank">gramaialm.at</a></div>
+                <div class="reco-line">ℹ️ Auberge magique en fond de vallée, mini-ferme.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~26 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour6', 47.410, 11.620)">
+              <div class="reco-details">
+                <h4>Almgasthaus Falzthurn (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Falzthurn 3, Pertisau</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~23 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour6', 47.441, 11.703)">
+              <div class="reco-details">
+                <h4>Restaurant Essbar (Soir)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Pertisau</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~25 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOUR 7 -->
+  <div id="jour7" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jour 7 : Dimanche 30 Août — Cascades de Krimml</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 Lac Achensee (08h30) ➔ Krimml (10h00)</div>
+          <div class="banner-item banner-type">🏔️ Grand Spectacle Chutes & Col</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j7">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j7">☀️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j7">--°C</div>
+              <div class="weather-desc" id="wdesc-j7">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j7">30 AOÛT 2026</div>
+        </div>
+        
+        <div id="map-jour7" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Temps de route / Km</div><div class="metric-value">1 h 20 min | 78 km</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato</div><div class="metric-value">~ 13,00 € (7,4 L)</div></div>
+          <div class="metric-box"><div class="metric-label">Péages du jour</div><div class="metric-value">Gerlospass (~11,00 €)</div></div>
+          <div class="metric-box"><div class="metric-label">Parking conseillé</div><div class="metric-value">Krimml P1 (~7€/j)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>🅿️ Adresse Parking :</strong> Wasserfälle Parking P1 : Nr. 47, 5743 Krimml.<br>
+          <strong>🎟️ Activités :</strong> Entrée sentier des Cascades : 8 € / ad | Gratuit bébé.
+        </div>
+
+        <h3>🌟 Sites Touristiques du Jour</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Route Panoramique du Col du Gerlospass</strong>
+            Une magnifique route alpine sinueuse reliant le Tyrol au pays de Salzbourg, offrant des points de vue spectaculaires sur les vallées glaciaires.
+          </li>
+          <li>
+            <strong>Cascades de Krimml (Chutes inférieures)</strong>
+            Cinquième plus haute cascade du monde (380m de chute). Le chemin menant au pied de la chute inférieure est asphalté, large et s'effectue en 15 minutes à plat depuis le parking (parfait maman enceinte et poussette).
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">08:30 – 10:00</div>
+            <div><strong>Trajet Achensee ➔ Krimml (78 km | 1h20) :</strong> Traversée par la Gerlos Alpenstraße (Péage ~11€). Points de vue superbes sur la haute vallée.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">10:15 – 12:45</div>
+            <div><strong>Marche aux Cascades de Krimml (Durée : 1h A/R | Niveau : Très Facile | Départ : Parking P1) :</strong> Sentier bas goudronné conduisant au pied du premier saut d'eau de 140m. Impressionnant.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">13:00 – 14:30</div><div>Déjeuner avec vue panoramique sur la vallée au pied des cascades.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">15:00 – 17:00</div>
+            <div>Balade calme au village de Krimml ou au parc aquatique familial Wasserwelten.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">17:30 – 19:30</div><div>Installation au camping au pied des montagnes.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Jour 7</h4>
+          <textarea id="note-j7" placeholder="Notes pour le jour 7..." oninput="saveNote('j7')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour7', 47.225, 12.176)">
+              <div class="reco-details">
+                <h4>Park-Camping Krimml</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Oberkrimml 25, Krimml</div>
+                <div class="reco-line">📞 +43 6564 7378</div>
+                <div class="reco-line">🌐 <a href="https://www.camping-krimml.at" target="_blank">camping-krimml.at</a></div>
+                <div class="reco-line">ℹ️ Vue directe sur le rugissement des cascades.</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~38 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour7', 47.230, 12.175)">
+              <div class="reco-details">
+                <h4>Camping Urspromm</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.3/5</span></div>
+                <div class="reco-line">📍 Proche Krimml</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~32 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour7', 47.210, 12.170)">
+              <div class="reco-details">
+                <h4>Gasthof Hölzlahnerhof (Midi)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Krimml 14, Krimml</div>
+                <div class="reco-line">🌐 <a href="https://www.hoelzlahnerhof.at" target="_blank">hoelzlahnerhof.at</a></div>
+                <div class="reco-line">ℹ️ Auberge traditionnelle au pied des chutes.</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~20 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour7', 47.218, 12.174)">
+              <div class="reco-details">
+                <h4>Gasthof Zur Post (Soir)</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Oberkrimml 12, Krimml</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~22 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURS 8 & 9 -->
+  <div id="jour89" class="tab-content">
+    <div class="day-layout">
+      <div class="card">
+        <h2>Jours 8 & 9 : Lundi 31 Août & Mardi 1er Sept. — Retour</h2>
+        
+        <div class="day-header-banner">
+          <div class="banner-item banner-step">📍 J8: Krimml ➔ Lindau | J9: Lindau ➔ Meaux</div>
+          <div class="banner-item banner-type">🏙️ Cité Historique & Route du Retour</div>
+        </div>
+
+        <div class="weather-banner" id="wbanner-j8">
+          <div class="weather-left">
+            <span class="weather-icon" id="wicon-j8">🌤️</span>
+            <div>
+              <div class="weather-temp" id="wtemp-j8">--°C</div>
+              <div class="weather-desc" id="wdesc-j8">Chargement météo API...</div>
+            </div>
+          </div>
+          <div class="weather-date-badge" id="wdate-j8">31 AOÛT & 01 SEPT 2026</div>
+        </div>
+        
+        <div id="map-jour89" class="map-container"></div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="metric-label">Distance J8 / J9</div><div class="metric-value">230 km (J8) | 560 km (J9)</div></div>
+          <div class="metric-box"><div class="metric-label">Carburant Ducato J8/J9</div><div class="metric-value">~ 38,20 € (J8) | ~ 93,00 € (J9)</div></div>
+          <div class="metric-box"><div class="metric-label">Péages J8 / J9</div><div class="metric-value">0 €</div></div>
+          <div class="metric-box"><div class="metric-label">Parking J8</div><div class="metric-value">Insel Lindau (~2,80€/h)</div></div>
+        </div>
+
+        <div class="info-block">
+          <strong>Parkings J8 :</strong> Parkplatz P1 Insel (Lindau) : Chemnitzer Str., 88131 Lindau.<br>
+          <strong>🎟️ Activités :</strong> Visite du Lindenhofpark (Gratuit).
+        </div>
+
+        <h3>🌟 Sites Touristiques des Jours 8 & 9</h3>
+        <ul class="poi-list">
+          <li>
+            <strong>Presqu'île de Lindau (Bavière)</strong>
+            Étape idéale pour couper le retour. Cité bavaroise médiévale posée sur une île du lac de Constance, avec ses ruelles piétonnes bordées d'arcades et son port surveillé par le célèbre lion de pierre.
+          </li>
+          <li>
+            <strong>Lindenhofpark (Lindau)</strong>
+            Un magnifique parc botanique ombragé s'avançant dans le lac. Parfait pour se détendre sur l'herbe et préparer le van avant le trajet final vers Meaux.
+          </li>
+        </ul>
+
+        <h3>📅 Programme détaillé heure par heure</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="time-badge">J8 : 09:00 – 12:30</div>
+            <div><strong>Trajet Krimml ➔ Lindau (230 km | 3h15) :</strong> Trajet du retour franchissant le col de l'Arlberg vers l'ouest du lac de Constance.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">J8 : 12:30 – 14:00</div><div>Déjeuner au bord de l'eau sur la presqu'île de Lindau.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">J8 : 14:30 – 17:00</div>
+            <div><strong>Flânerie sur l'Île de Lindau & Lindenhofpark :</strong> Visite des ruelles médiévales, du port et détente à l'ombre du grand parc botanique au bord du lac.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">J8 : 17:30 – 20:00</div><div>Installation au camping étape, rangement du van et repos.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="time-badge">J9 : 08:30 – 14:00</div>
+            <div><strong>Trajet Retour Direct Lindau ➔ Meaux (560 km | 5h15) :</strong> Autoroute allemande (A96/A81) puis France (A4). Arrivée début d'après-midi à Meaux.</div>
+          </div>
+        </div>
+
+        <div class="comments-section">
+          <h4>📝 Notes & Souvenirs du Retour (J8/J9)</h4>
+          <textarea id="note-j89" placeholder="Notes pour les jours 8 et 9..." oninput="saveNote('j89')"></textarea>
+        </div>
+      </div>
+      
+      <div>
+        <div class="card">
+          <h3>⛺ Où Camper (Étape J8)</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour89', 47.535, 9.715)">
+              <div class="reco-details">
+                <h4>Park Camping Lindau</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.4/5</span></div>
+                <div class="reco-line">📍 Fraunhoferstraße 20, Lindau</div>
+                <div class="reco-line">🌐 <a href="https://www.park-camping.de" target="_blank">park-camping.de</a></div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~45 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour89', 47.531, 9.748)">
+              <div class="reco-details">
+                <h4>Weiss-Camping Lochau</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Bäumle 2, Lochau</div>
+                <div class="reco-price">💰 Nuit (Van+2ad+1bb) : ~42 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🍽️ Où Manger (Lindau J8)</h3>
+          <div class="reco-container">
+            <div class="reco-card" onclick="zoomTo('jour89', 47.546, 9.684)">
+              <div class="reco-details">
+                <h4>Gasthaus Zum Sünfzen</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.5/5</span></div>
+                <div class="reco-line">📍 Maximilianstraße 1, Lindau</div>
+                <div class="reco-line">🌐 <a href="https://www.suenfzen.de" target="_blank">suenfzen.de</a></div>
+                <div class="reco-price">💰 Menu moyen/pers : ~24 €</div>
+              </div>
+            </div>
+            <div class="reco-card" onclick="zoomTo('jour89', 47.544, 9.682)">
+              <div class="reco-details">
+                <h4>Fischergasse</h4>
+                <div class="reco-meta"><span class="reco-rating">⭐ 4.6/5</span></div>
+                <div class="reco-line">📍 Fischergasse 25, Lindau</div>
+                <div class="reco-price">💰 Menu moyen/pers : ~26 €</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFOS, MATÉRIEL & URGENCES -->
+  <div id="infos" class="tab-content">
+    <div class="card">
+      <h2>Informations Pratiques, Check-List Matériel, Bébé & Urgences</h2>
+      
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-label">Urgence Européenne</div><div class="metric-value" style="font-size:22px; color:var(--accent);">112</div></div>
+        <div class="metric-box"><div class="metric-label">Secours Médical (Autriche)</div><div class="metric-value" style="font-size:22px; color:var(--accent);">144</div></div>
+        <div class="metric-box"><div class="metric-label">Police (Autriche)</div><div class="metric-value" style="font-size:22px; color:var(--accent);">133</div></div>
+        <div class="metric-box"><div class="metric-label">Secours en Montagne</div><div class="metric-value" style="font-size:22px; color:var(--accent);">140</div></div>
+      </div>
+
+      <h3>🏥 Hôpitaux Référents sur le Parcours</h3>
+      <table class="urgency-table">
+        <thead>
+          <tr><th>Zone</th><th>Établissement</th><th>Contact & Adresse</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Vorarlberg / Bregenz</strong></td>
+            <td>Landeskrankenhaus Bregenz</td>
+            <td>Carl-Pedenz-Straße 2, 6900 Bregenz<br>📞 +43 5574 4010</td>
+          </tr>
+          <tr>
+            <td><strong>Tyrol Ouest / Reutte</strong></td>
+            <td>Bezirkskrankenhaus Reutte</td>
+            <td>Krankenhausstraße 39, 6600 Ehenbichl<br>📞 +43 5672 6010</td>
+          </tr>
+          <tr>
+            <td><strong>Innsbruck</strong></td>
+            <td>Universitätsklinik Innsbruck<br><em>(Maternité & Urgences pédiatriques)</em></td>
+            <td>Anichstraße 35, 6020 Innsbruck<br>📞 +43 512 5040</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>🍼 Marques de Pots Bébé & Produits de Soin en Autriche</h3>
+      <div class="info-block" style="background-color:#e0f2fe; border-color:#7dd3fc; color:#0369a1;">
+        <strong>🛒 Où acheter les petits pots & couches :</strong><br>
+        • <strong>Drogueries DM (Drogerie Markt) & Müller :</strong> Incontournables en Autriche. Proposent le plus grand rayon bébé (nourriture bio, couches, soins).<br>
+        • <strong>Supermarchés SPAR, BILLA & HOFER :</strong> Présents dans chaque ville du parcours.<br>
+        <strong>🍼 Marques principales disponibles :</strong><br>
+        • <strong>HiPP :</strong> Marque leader absolue en Autriche (pots légumes, repas complets, fruits bio, laits en poudre).<br>
+        • <strong>Alete & Bebivita :</strong> Excellentes marques très répandues pour petits pots repas et compotes gourdes.<br>
+        • <strong>Aptamil & Hipp Bio Combiotik :</strong> Laits de suite 2ème/3ème âge disponibles dans toutes les drogueries DM.
+      </div>
+
+      <h3>🛒 Supermarchés Ravitaillement Stratégiques sur l'Itinéraire</h3>
+      <ul class="poi-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+        <li>
+          <strong>Bregenz (Vorarlberg)</strong>
+          <strong>INTERSPAR Hypermarkt :</strong> Rheinstraße 11, 6900 Bregenz. Grand supermarché parfait pour le 1er ravitaillement.
+        </li>
+        <li>
+          <strong>Riezlern (Kleinwalsertal)</strong>
+          <strong>SPAR Supermarkt :</strong> Walserstraße 63, 6991 Riezlern. Au centre du village.
+        </li>
+        <li>
+          <strong>Reutte / Plansee</strong>
+          <strong>BILLA Supermarkt :</strong> Mühler Str. 22, 6600 Reutte. Idéal avant d'aller au lac.
+        </li>
+        <li>
+          <strong>Längenfeld (Ötztal)</strong>
+          <strong>MPREIS Supermarkt :</strong> Unterlängenfeld 76, 6444 Längenfeld. À 2 min du camping.
+        </li>
+        <li>
+          <strong>Innsbruck</strong>
+          <strong>HOFER (Discount) :</strong> Museumstraße 38, 6020 Innsbruck.
+        </li>
+        <li>
+          <strong>Achenkirch (Achensee)</strong>
+          <strong>SPAR Markt :</strong> Achenkirch 330, 6215 Achenkirch. Proche du camping.
+        </li>
+      </ul>
+
+      <h3>🎒 Check-List Matériel & Vêtements (Spécial Van Life & Famille)</h3>
+      <div class="checklist-grid">
+        <div class="checklist-box">
+          <h5>🚐 Équipement Van Ducato</h5>
+          <ul>
+            <li>Vignette autoroute 10 jours collée</li>
+            <li>Gilets jaunes (1/occupant dans l'habitacle)</li>
+            <li>Triangle & Trousse de secours obligatoire</li>
+            <li>Câble électrique + Adaptateur camping européen</li>
+            <li>Remplisseur d'eau / Tuyau flexible</li>
+            <li>Cales de niveau pour le Ducato</li>
+            <li>Pare-soleil Isothermes sur mesure cabine</li>
+          </ul>
+        </div>
+        <div class="checklist-box">
+          <h5>🤰 Maman (Enceinte 4,5 mois)</h5>
+          <ul>
+            <li>Dossier médical / Carnet de santé maternité</li>
+            <li>Chaussures de marche confortables & légères</li>
+            <li>Bas de contention pour la route en van</li>
+            <li>Coussin de confort / d'allaitement pour la nuit</li>
+            <li>Crème solaire haute protection</li>
+            <li>Gourde isotherme (Hydratation régulière)</li>
+            <li>Veste coupe-vent / imperméable respirante</li>
+          </ul>
+        </div>
+        <div class="checklist-box">
+          <h5>👶 Bébé (21 Mois)</h5>
+          <ul>
+            <li>Poussette tout-terrain pliante / compacte</li>
+            <li>Porte-bébé physiologique de randonnée</li>
+            <li>Carnet de santé + Carnet de vaccination</li>
+            <li>Couches, lingettes & Sacs poubelles van</li>
+            <li>Chapeau, lunettes de soleil & Crème bébé</li>
+            <li>Combinaison de pluie / Vêtements chauds</li>
+            <li>Petites chaussures de marche bébé</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="day-layout" style="margin-top:25px;">
+        <div>
+          <h3>🚐 Réglementation & Conduite</h3>
+          <ul style="font-size:13px; line-height:1.6; color:var(--text-muted);">
+            <li><strong>Wildcamping (Camping Sauvage) :</strong> Strictement INTERDIT au Tyrol et Vorarlberg sous peine d'amendes salées. Dormir uniquement en camping ou Stellplatz officielle.</li>
+            <li><strong>Péages Autoroute :</strong> Inclus avec la Vignette 10j. Seuls certains grands tunnels/cols (Gerlospass ~11€) ont des péages au passage.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>💶 Devise & Paiements</h3>
+          <ul style="font-size:13px; line-height:1.6; color:var(--text-muted);">
+            <li><strong>Monnaie :</strong> Euro (€). Carte bancaire acceptée partout sauf dans certaines petites auberges d'alpage ou parkings (prévoir 100€ d'espèces).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <h4>📝 Notes Générales Pratiques</h4>
+        <textarea id="note-infos" placeholder="Saisissez vos notes pratiques ici..." oninput="saveNote('infos')"></textarea>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SCRIPT JS COMPLET (MÉTÉO API REELLE, MAPS, LOCALSTORAGE) -->
+<script>
+  const mapData = {
+    'synthese': {
+      waypoints: [[48.95, 2.88], [47.50, 9.74], [47.35, 10.18], [47.47, 10.80], [47.14, 10.92], [47.26, 11.39], [47.44, 11.70], [47.20, 12.17], [47.54, 9.68]],
+      markers: [
+        { pos: [47.50, 9.74], icon: '📍', text: 'Bregenz / Constance' },
+        { pos: [47.35, 10.18], icon: '📍', text: 'Kleinwalsertal' },
+        { pos: [47.47, 10.80], icon: '📍', text: 'Plansee' },
+        { pos: [47.14, 10.92], icon: '📍', text: 'Stuibenfall / Ötztal' },
+        { pos: [47.26, 11.39], icon: '📍', text: 'Innsbruck' },
+        { pos: [47.44, 11.70], icon: '📍', text: 'Achensee' },
+        { pos: [47.20, 12.17], icon: '📍', text: 'Krimml' },
+        { pos: [47.54, 9.68], icon: '📍', text: 'Lindau' }
+      ]
+    },
+    'jour1': {
+      waypoints: [[48.95, 2.88], [47.50, 9.74]],
+      markers: [
+        { pos: [48.95, 2.88], icon: '🏁', text: 'Départ : Meaux' },
+        { pos: [47.50, 9.74], icon: '📍', text: 'Arrivée : Bregenz' },
+        { pos: [47.525, 9.745], icon: '⛺', text: 'Weiss-Camping' },
+        { pos: [47.535, 9.715], icon: '⛺', text: 'Park Camping Lindau' },
+        { pos: [47.502, 9.715], icon: '⛺', text: 'Camping Park Stadt Bregenz' },
+        { pos: [47.504, 9.745], icon: '🍽️', text: 'Wirtshaus am See' },
+        { pos: [47.506, 9.744], icon: '🍽️', text: 'Pier 69' },
+        { pos: [47.503, 9.747], icon: '🍽️', text: 'Gasthaus Kornmesser' }
+      ]
+    },
+    'jour2': {
+      waypoints: [[47.50, 9.74], [47.35, 10.18]],
+      markers: [
+        { pos: [47.35, 10.18], icon: '📍', text: 'Riezlern' },
+        { pos: [47.327, 10.155], icon: '⛺', text: 'Camping Vorderboden' },
+        { pos: [47.348, 10.175], icon: '⛺', text: 'Zentralcamping Hirschegg' },
+        { pos: [47.356, 10.185], icon: '🍽️', text: 'Walser Stuba' },
+        { pos: [47.340, 10.160], icon: '🍽️', text: 'Alpengasthof Hörnlepass' },
+        { pos: [47.352, 10.180], icon: '🍽️', text: 'Restaurant Freiberg' }
+      ]
+    },
+    'jour3': {
+      waypoints: [[47.35, 10.18], [47.47, 10.80]],
+      markers: [
+        { pos: [47.47, 10.80], icon: '📍', text: 'Plansee' },
+        { pos: [47.476, 10.814], icon: '⛺', text: 'Sennalpe Camping' },
+        { pos: [47.485, 10.745], icon: '⛺', text: 'Camping Rudy Höfer' },
+        { pos: [47.471, 10.792], icon: '🍽️', text: 'Hotel Seespitz' },
+        { pos: [47.480, 10.730], icon: '🍽️', text: 'Gasthof Zum Turm' }
+      ]
+    },
+    'jour4': {
+      waypoints: [[47.47, 10.80], [47.14, 10.92]],
+      markers: [
+        { pos: [47.126, 10.941], icon: '📍', text: 'Stuibenfall' },
+        { pos: [47.070, 10.970], icon: '⛺', text: 'Camping Längenfeld' },
+        { pos: [47.230, 10.730], icon: '⛺', text: 'Aktiv-Camping Imst' },
+        { pos: [47.142, 10.927], icon: '🍽️', text: 'Gasthof Krone' },
+        { pos: [47.144, 10.925], icon: '🍽️', text: 'Ötztalerei' }
+      ]
+    },
+    'jour5': {
+      waypoints: [[47.14, 10.92], [47.26, 11.39], [47.44, 11.70]],
+      markers: [
+        { pos: [47.26, 11.39], icon: '📍', text: 'Innsbruck' },
+        { pos: [47.472, 11.711], icon: '⛺', text: 'Camping Schwarzenau' },
+        { pos: [47.504, 11.708], icon: '⛺', text: 'Alpen-Caravanpark Achensee' },
+        { pos: [47.268, 11.393], icon: '🍽️', text: 'Goldener Adler' },
+        { pos: [47.269, 11.394], icon: '🍽️', text: 'Strudel-Cafe Kröll' }
+      ]
+    },
+    'jour6': {
+      waypoints: [[47.472, 11.711], [47.44, 11.70]],
+      markers: [
+        { pos: [47.44, 11.70], icon: '📍', text: 'Pertisau (Achensee)' },
+        { pos: [47.400, 11.600], icon: '🍽️', text: 'Gramai Alm' },
+        { pos: [47.410, 11.620], icon: '🍽️', text: 'Almgasthaus Falzthurn' },
+        { pos: [47.441, 11.703], icon: '🍽️', text: 'Restaurant Essbar' }
+      ]
+    },
+    'jour7': {
+      waypoints: [[47.44, 11.70], [47.20, 12.17]],
+      markers: [
+        { pos: [47.20, 12.17], icon: '📍', text: 'Cascades de Krimml' },
+        { pos: [47.225, 12.176], icon: '⛺', text: 'Park-Camping Krimml' },
+        { pos: [47.230, 12.175], icon: '⛺', text: 'Camping Urspromm' },
+        { pos: [47.210, 12.170], icon: '🍽️', text: 'Hölzlahnerhof' },
+        { pos: [47.218, 12.174], icon: '🍽️', text: 'Gasthof Zur Post' }
+      ]
+    },
+    'jour89': {
+      waypoints: [[47.20, 12.17], [47.54, 9.68], [48.95, 2.88]],
+      markers: [
+        { pos: [47.54, 9.68], icon: '📍', text: 'Lindau (Étape)' },
+        { pos: [47.535, 9.715], icon: '⛺', text: 'Park Camping Lindau' },
+        { pos: [47.531, 9.748], icon: '⛺', text: 'Weiss-Camping Lochau' },
+        { pos: [47.546, 9.684], icon: '🍽️', text: 'Gasthaus Zum Sünfzen' },
+        { pos: [47.544, 9.682], icon: '🍽️', text: 'Fischergasse' },
+        { pos: [48.95, 2.88], icon: '🏁', text: 'Arrivée : Meaux' }
+      ]
+    }
+  };
+
+  let maps = {}; 
+
+  function zoomTo(dayId, lat, lng) {
+    if (maps[dayId]) {
+      maps[dayId].setView([lat, lng], 16, { animate: true, duration: 1.5 });
+      window.scrollTo({ top: document.getElementById('map-' + dayId).offsetTop - 50, behavior: 'smooth' });
+    }
+  }
+
+  function openDay(evt, dayId) {
+    var tabcontent = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    var tablinks = document.getElementsByClassName("tab-btn");
+    for (let i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(dayId).style.display = "block";
+    evt.currentTarget.className += " active";
+
+    setTimeout(() => {
+      if (!maps[dayId] && mapData[dayId]) {
+        const map = L.map('map-' + dayId);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        
+        const data = mapData[dayId];
+        
+        if (data.waypoints) {
+          L.Routing.control({
+            waypoints: data.waypoints.map(c => L.latLng(c[0], c[1])),
+            router: L.Routing.osrmv1({ language: 'fr', profile: 'driving' }),
+            lineOptions: { styles: [{color: '#2d5a27', opacity: 0.9, weight: 5}] },
+            createMarker: function() { return null; },
+            show: false, addWaypoints: false, routeWhileDragging: false, fitSelectedRoutes: true
+          }).addTo(map);
+        }
+        
+        data.markers.forEach(m => {
+          const customIcon = L.divIcon({ html: m.icon, className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 15] });
+          L.marker(m.pos, {icon: customIcon}).bindPopup(m.text).addTo(map);
+        });
+        
+        maps[dayId] = map;
+      } else if (maps[dayId]) {
+        maps[dayId].invalidateSize(); 
+      }
+    }, 150);
+  }
+
+  // Interprétation des codes WMO Open-Meteo
+  function getWeatherInfo(code) {
+    if (code === 0) return { icon: "☀️", desc: "Ciel parfaitement dégagé" };
+    if (code >= 1 && code <= 3) return { icon: "🌤️", desc: "Eclaircies & passages nuageux" };
+    if (code === 45 || code === 48) return { icon: "🌫️", desc: "Brouillard matinal" };
+    if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Pluie / Bruine" };
+    if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Averses passagères" };
+    if (code >= 95) return { icon: "🌩️", desc: "Risque d'orage en montagne" };
+    return { icon: "⛅", desc: "Nuageux" };
+  }
+
+  // API Météo Réelle Open-Meteo en direct selon la date sélectionnée
+  async function fetchRealWeather(key, lat, lng, dateStr) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weather_code,temperature_2m_max&timezone=Europe%2FBerlin&start_date=${dateStr}&end_date=${dateStr}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data && data.daily && data.daily.temperature_2m_max) {
+        const temp = Math.round(data.daily.temperature_2m_max[0]);
+        const code = data.daily.weather_code[0];
+        const info = getWeatherInfo(code);
+
+        let tempEl = document.getElementById('wtemp-' + key);
+        let descEl = document.getElementById('wdesc-' + key);
+        let iconEl = document.getElementById('wicon-' + key);
+
+        if (tempEl) tempEl.innerText = temp + "°C";
+        if (descEl) descEl.innerText = info.desc;
+        if (iconEl) iconEl.innerText = info.icon;
+      }
+    } catch (e) {
+      console.log("Erreur chargement météo API :", e);
+    }
+  }
+
+  // Mise à jour synchrone des dates & appel météo API
+  function updateWeatherDates() {
+    const inputVal = document.getElementById('global-start-date').value;
+    if (!inputVal) return;
+
+    const startDate = new Date(inputVal);
+    const dayConfig = {
+      'j1': { offset: 0, lat: 47.50, lng: 9.74 },  // Bregenz
+      'j2': { offset: 1, lat: 47.35, lng: 10.18 }, // Riezlern
+      'j3': { offset: 2, lat: 47.47, lng: 10.80 }, // Plansee
+      'j4': { offset: 3, lat: 47.14, lng: 10.92 }, // Stuibenfall
+      'j5': { offset: 4, lat: 47.26, lng: 11.39 }, // Innsbruck
+      'j6': { offset: 5, lat: 47.44, lng: 11.70 }, // Achensee
+      'j7': { offset: 6, lat: 47.20, lng: 12.17 }, // Krimml
+      'j8': { offset: 7, lat: 47.54, lng: 9.68 }   // Lindau
+    };
+
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+
+    for (const [key, cfg] of Object.entries(dayConfig)) {
+      let currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + cfg.offset);
+      
+      let isoDate = currentDate.toISOString().split('T')[0];
+
+      let dateEl = document.getElementById('wdate-' + key);
+      if (dateEl) dateEl.innerText = currentDate.toLocaleDateString('fr-FR', options).toUpperCase();
+
+      fetchRealWeather(key, cfg.lat, cfg.lng, isoDate);
+    }
+  }
+
+  // LocalStorage pour la sauvegarde automatique des notes
+  function saveNote(key) {
+    const text = document.getElementById('note-' + key).value;
+    localStorage.setItem('autriche_van_ducato_note_' + key, text);
+  }
+
+  function loadNotes() {
+    const keys = ['synthese', 'j1', 'j2', 'j3', 'j4', 'j5', 'j6', 'j7', 'j89', 'infos'];
+    keys.forEach(key => {
+      const saved = localStorage.getItem('autriche_van_ducato_note_' + key);
+      const el = document.getElementById('note-' + key);
+      if (saved && el) {
+        el.value = saved;
+      }
+    });
+  }
+
+  window.onload = () => {
+    openDay({currentTarget: document.querySelector('.tab-btn.active')}, 'synthese');
+    updateWeatherDates();
+    loadNotes();
+  };
+</script>
+
+</body>
+</html>
